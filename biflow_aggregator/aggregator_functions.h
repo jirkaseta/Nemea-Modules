@@ -1,12 +1,12 @@
 /**
- *  * @file agregator_functions.h
- *   * @author Pavel Siska (siska@cesnet.cz)
- *    * @brief 
- *     * @version 0.1
- *      * @date 31.8.2020
- *       * 
- *        * @copyright Copyright (c) 2020 CESNET
- *         */
+ * @file agregator_functions.h
+ * @author Pavel Siska (siska@cesnet.cz)
+ * @brief 
+ * @version 0.1
+ * @date 31.8.2020
+ *   
+ * @copyright Copyright (c) 2020 CESNET
+ */
 
 #ifndef AGGREGATOR_FUNCTIONS_H
 #define AGGREGATOR_FUNCTIONS_H
@@ -20,8 +20,8 @@
 namespace aggregator {
 
 /*
- *  * Structure of unirec array input.
- *   */
+ * Structure of unirec array input.
+ */
 struct ur_array_data {
     std::size_t cnt_elements;
     const void *ptr_first;
@@ -29,8 +29,8 @@ struct ur_array_data {
 };
 
 /*
- *  * Basic template data structure that store variable of given type T.
- *   */
+ * Basic template data structure that store variable of given type T.
+ */ 
 template <typename T>
 struct Basic_data {
     T data; 
@@ -41,12 +41,11 @@ struct Basic_data {
         if (cfg != nullptr)
             basic->data = std::numeric_limits<T>::max();
     }
-
 };
 
 /*
- *  * Structure used to store data for average function.
- *   */
+ * Structure used to store data for average function.
+ */
 template <typename T>
 struct Average_data : Basic_data<T> {
     uint32_t cnt;
@@ -69,11 +68,11 @@ struct Average_data : Basic_data<T> {
 struct Config_append {
     std::size_t limit;
     char delimiter;
-} 
+};
 
 /*
- *  * Structure used to store data for append function.
- *   */
+ * Structure used to store data for append function.
+ */
 template<typename T>
 struct Append_data : Config_append {
     std::vector<T> data;
@@ -103,8 +102,8 @@ struct Config_sorted_append {
 };
 
 /*
- *  * Structure used to store data for sorted append function.
- *   */
+ * Structure used to store data for sorted append function.
+ */
 template <typename T, typename K>
 struct Sorted_append_data : Config_sorted_append {
     std::vector<std::pair<std::vector<T>,K>> data;
@@ -148,11 +147,11 @@ struct Sorted_append_data : Config_sorted_append {
 };
 
 /**
- *  * Makes sum of values stored on src and dst pointers from given type T.
- *   * @tparam T template type variable.
- *    * @param [in] src pointer to source of new data.
- *     * @param [in,out] dst pointer to already stored data which will be updated (modified).
- *      */
+ * Makes sum of values stored on src and dst pointers from given type T.
+ * @tparam T template type variable.
+ * @param [in] src pointer to source of new data.
+ * @param [in,out] dst pointer to already stored data which will be updated (modified).
+ */
 template<typename T>
 inline void sum(const void *src, void *dst) noexcept
 {
@@ -161,11 +160,11 @@ inline void sum(const void *src, void *dst) noexcept
 }
 
 /**
- *  * Store min value from values stored on src and dst pointers from given type T.
- *   * @tparam T template type variable.
- *    * @param [in] src pointer to source of new data.
- *     * @param [in,out] dst pointer to already stored data which will be updated (modified).
- *      */
+ * Store min value from values stored on src and dst pointers from given type T.
+ * @tparam T template type variable.
+ * @param [in] src pointer to source of new data.
+ * @param [in,out] dst pointer to already stored data which will be updated (modified).
+ */
 template<typename T>
 inline void min(const void *src, void *dst) noexcept
 {
@@ -175,11 +174,11 @@ inline void min(const void *src, void *dst) noexcept
 }
 
 /**
- *  * Store max value from values stored on src and dst pointers from given type T.
- *   * @tparam T template type variable.
- *    * @param [in] src pointer to source of new data.
- *     * @param [in,out] dst pointer to already stored data which will be updated (modified).
- *      */
+ * Store max value from values stored on src and dst pointers from given type T.
+ * @tparam T template type variable.
+ * @param [in] src pointer to source of new data.
+ * @param [in,out] dst pointer to already stored data which will be updated (modified).
+ */
 template<typename T>
 inline void max(const void *src, void *dst) noexcept
 {
@@ -189,11 +188,11 @@ inline void max(const void *src, void *dst) noexcept
 }
 
 /**
- *  * Store bitwise AND value from values stored on src and dst pointers from given type T.
- *   * @tparam T template type variable.
- *    * @param [in] src pointer to source of new data.
- *     * @param [in,out] dst pointer to already stored data which will be updated (modified).
- *      */
+ * Store bitwise AND value from values stored on src and dst pointers from given type T.
+ * @tparam T template type variable.
+ * @param [in] src pointer to source of new data.
+ * @param [in,out] dst pointer to already stored data which will be updated (modified).
+ */
 template <typename T>
 inline void bitwise_and(const void *src, void *dst) noexcept
 {
@@ -202,11 +201,11 @@ inline void bitwise_and(const void *src, void *dst) noexcept
 }
 
 /**
- *  * Makes sum of values stored on src and dst pointers from given type T.
- *   * @tparam T template type variable.
- *    * @param [in] src pointer to source of new data.
- *     * @param [in,out] dst pointer to already stored data which will be updated (modified).
- *      */
+ * Makes sum of values stored on src and dst pointers from given type T.
+ * @tparam T template type variable.
+ * @param [in] src pointer to source of new data.
+ * @param [in,out] dst pointer to already stored data which will be updated (modified).
+ */
 template<typename T>
 inline void avg(const void *src, void *dst) noexcept
 {
@@ -216,11 +215,11 @@ inline void avg(const void *src, void *dst) noexcept
 }
 
 /**
- *  * Append values stored on src pointers to dst pointer from given type T.
- *   * @tparam T template type variable.
- *    * @param [in] src pointer to source of new data.
- *     * @param [in,out] dst pointer to already stored data which will be updated (modified).
- *      */
+ * Append values stored on src pointers to dst pointer from given type T.
+ * @tparam T template type variable.
+ * @param [in] src pointer to source of new data.
+ * @param [in,out] dst pointer to already stored data which will be updated (modified).
+ */
 template <typename T>
 inline void append(const void *src, void *dst) noexcept
 {
@@ -262,6 +261,6 @@ inline void sorted_append(const void *src, void *dst) noexcept
     sorted_append->data.emplace_back(std::make_pair(t_data, *((K*)src_data->sort_key)));
 }
 
-}
+} // namespace aggregator
 
 #endif // AGGREGATOR_FUNCTIONS_H
