@@ -54,6 +54,9 @@ class Field_template {
     template<Field_type ag_type, typename T>
     int assign() noexcept;
 
+    template<typename T>
+    int assign() noexcept;
+
 protected:
 
     aggr_func ag_fnc;

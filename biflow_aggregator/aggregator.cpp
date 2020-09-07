@@ -63,43 +63,49 @@ int Field_template::assign() noexcept
     return 0;
 }
 
+template<typename T>
+int Field_template::assign() noexcept
+{
+    ag_fnc = bitwise_and<T>;
+    post_proc_fnc = nullptr;
+    typename_size = sizeof(T);
+    init_fnc = Basic_data<T>::init;
+    ag_data_size = sizeof(Basic_data<T>);
+    return 0;
+}
+
 template<Field_type ag_type, typename T>
 int Field_template::assign() noexcept
 {
     typename_size = sizeof(T);
 
-    if constexpr (ag_type == SUM) {
+    if (ag_type == SUM) {
         ag_fnc = sum<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
         ag_data_size = sizeof(Basic_data<T>);
-    } else if constexpr (ag_type == MIN) {
+    } else if (ag_type == MIN) {
         ag_fnc = min<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
         ag_data_size = sizeof(Basic_data<T>);
-    } else if constexpr (ag_type == MAX) {
+    } else if (ag_type == MAX) {
         ag_fnc = max<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
         ag_data_size = sizeof(Basic_data<T>);
-    } else if constexpr (ag_type == BIT_AND) {
-        ag_fnc = bitwise_and<T>;
-        post_proc_fnc = nullptr;
-        init_fnc = Basic_data<T>::init;
-        ag_data_size = sizeof(Basic_data<T>);
-    } else if constexpr (ag_type == AVG) {
+    } else if (ag_type == AVG) {
         ag_fnc = avg<T>;
         post_proc_fnc = Average_data<T>::postprocessing;
         init_fnc = Average_data<T>::init;
         ag_data_size = sizeof(Average_data<T>);
-    } else if constexpr (ag_type == APPEND) {
+    } else if (ag_type == APPEND) {
         ag_fnc = append<T>;
         post_proc_fnc = Append_data<T>::postprocessing;
         init_fnc = Append_data<T>::init;
         ag_data_size = sizeof(Append_data<T>);
     } else {
-        static_assert("Invalid Field type.");
+        assert("Invalid Field type.");
         return 1;
     }
     return 0; 
@@ -165,15 +171,15 @@ int Field_template::set_templates(const Field_type ag_type, const ur_field_type_
         }
     case BIT_AND:
         switch (ur_f_type) {
-        case UR_TYPE_CHAR:   return assign<BIT_AND, char>();
-        case UR_TYPE_UINT8:  return assign<BIT_AND, uint8_t>();
-        case UR_TYPE_INT8:   return assign<BIT_AND, int8_t>();
-        case UR_TYPE_UINT16: return assign<BIT_AND, uint16_t>();
-        case UR_TYPE_INT16:  return assign<BIT_AND, int16_t>();
-        case UR_TYPE_UINT32: return assign<BIT_AND, uint32_t>();
-        case UR_TYPE_INT32:  return assign<BIT_AND, int32_t>();
-        case UR_TYPE_UINT64: return assign<BIT_AND, uint64_t>();
-        case UR_TYPE_INT64:  return assign<BIT_AND, int64_t>();
+        case UR_TYPE_CHAR:   return assign<char>();
+        case UR_TYPE_UINT8:  return assign<uint8_t>();
+        case UR_TYPE_INT8:   return assign<int8_t>();
+        case UR_TYPE_UINT16: return assign<uint16_t>();
+        case UR_TYPE_INT16:  return assign<int16_t>();
+        case UR_TYPE_UINT32: return assign<uint32_t>();
+        case UR_TYPE_INT32:  return assign<int32_t>();
+        case UR_TYPE_UINT64: return assign<uint64_t>();
+        case UR_TYPE_INT64:  return assign<int64_t>();
         default:
             std::cerr << "Only char, int and uint can be used to BIT AND function." << std::endl;
             return 1;
