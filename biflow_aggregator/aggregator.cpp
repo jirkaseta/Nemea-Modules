@@ -8,18 +8,33 @@
  * @copyright Copyright (c) 2020 CESNET
  */
 
-#include "aggregator_fields.h"
-#include "aggregator_functions.h"
 #include "aggregator.h"
+#include "aggregator_functions.h"
 
 #include <limits>
 #include <cassert>
 
 using namespace aggregator;
 
-const void *Field_template::post_processing(void *ag_data, std::size_t& typename_size, std::size_t& elem_cnt)
+void Flow_data::update(const time_t time_first, const time_t time_last) noexcept
 {
-    typename_size = this.typename_size;
+    cnt++;
+    if (first > time_first)
+        first = time_first;
+    if (last < time_last)
+        last = time_last;
+}
+
+Flow_data::Flow_data()
+{
+    cnt = 0;
+    last = 0;
+    first = std::numeric_limits<time_t>::max();
+}
+
+const void *Field::post_processing(void *ag_data, std::size_t& typename_size, std::size_t& elem_cnt)
+{
+    typename_size = this->typename_size;
     if (post_proc_fnc)
         return post_proc_fnc(ag_data, elem_cnt);
 
@@ -27,15 +42,20 @@ const void *Field_template::post_processing(void *ag_data, std::size_t& typename
     return static_cast<const void *>(ag_data);
 }
 
-void Field_template::aggregate(const void *src, void *dst)
+void Field::aggregate(const void *src, void *dst)
 {
     ag_fnc(src, dst);
+}
+
+void Field::init(void *tmplt_mem, const void *cfg)
+{
+    init_fnc(tmplt_mem, cfg);
 }
 
 template<typename T, typename K>
 int Field_template::assign() noexcept
 {
-    ag_fnc = Sorted_append<T, K>;
+    ag_fnc = sorted_append<T, K>;
     post_proc_fnc = Sorted_append_data<T, K>::postprocessing;
     typename_size = sizeof(T);
     init_fnc = Sorted_append_data<T, K>::init;
@@ -43,50 +63,43 @@ int Field_template::assign() noexcept
     return 0;
 }
 
-template<typename T>
-int Field_template::assign(const Field_type ag_type) noexcept
+template<Field_type ag_type, typename T>
+int Field_template::assign() noexcept
 {
     typename_size = sizeof(T);
 
-    switch (ag_type) {
-    case SUM:
+    if constexpr (ag_type == SUM) {
         ag_fnc = sum<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
         ag_data_size = sizeof(Basic_data<T>);
-        break;
-    case MIN:
+    } else if constexpr (ag_type == MIN) {
         ag_fnc = min<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
         ag_data_size = sizeof(Basic_data<T>);
-        break;
-    case MAX:
+    } else if constexpr (ag_type == MAX) {
         ag_fnc = max<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
         ag_data_size = sizeof(Basic_data<T>);
-        break;
-    case BIT_AND:
+    } else if constexpr (ag_type == BIT_AND) {
         ag_fnc = bitwise_and<T>;
         post_proc_fnc = nullptr;
         init_fnc = Basic_data<T>::init;
-        ag_data_size = sizeof(basic_data<T>);
-        break;
-    case AVG:
+        ag_data_size = sizeof(Basic_data<T>);
+    } else if constexpr (ag_type == AVG) {
         ag_fnc = avg<T>;
-        post_proc_fnc = Average_data::postprocessing;
+        post_proc_fnc = Average_data<T>::postprocessing;
         init_fnc = Average_data<T>::init;
         ag_data_size = sizeof(Average_data<T>);
-        break;
-    case APPEND:
+    } else if constexpr (ag_type == APPEND) {
         ag_fnc = append<T>;
         post_proc_fnc = Append_data<T>::postprocessing;
         init_fnc = Append_data<T>::init;
         ag_data_size = sizeof(Append_data<T>);
-        break;
-    default:
-        assert("Invalid case option.\n");
+    } else {
+        static_assert("Invalid Field type.");
         return 1;
     }
     return 0; 
@@ -97,74 +110,78 @@ int Field_template::set_templates(const Field_type ag_type, const ur_field_type_
     switch (ag_type) {
     case SUM:
         switch (ur_f_type) {
-        case UR_TYPE_CHAR:   return assign<char>(ag_type);
-        case UR_TYPE_UINT8:  return assign<uint8_t>(ag_type);
-        case UR_TYPE_INT8:   return assign<int8_t>(ag_type);
-        case UR_TYPE_UINT16: return assign<uint16_t>(ag_type);
-        case UR_TYPE_INT16:  return assign<int16_t>(ag_type);
-        case UR_TYPE_UINT32: return assign<uint32_t>(ag_type);
-        case UR_TYPE_INT32:  return assign<int32_t>(ag_type);
-        case UR_TYPE_UINT64: return assign<uint64_t>(ag_type);
-        case UR_TYPE_INT64:  return assign<int64_t>(ag_type);
-        case UR_TYPE_FLOAT:  return assign<float>(ag_type);
-        case UR_TYPE_DOUBLE: return assign<double>(ag_type);
+        case UR_TYPE_CHAR:   return assign<SUM, char>();
+        case UR_TYPE_UINT8:  return assign<SUM, uint8_t>();
+        case UR_TYPE_INT8:   return assign<SUM, int8_t>();
+        case UR_TYPE_UINT16: return assign<SUM, uint16_t>();
+        case UR_TYPE_INT16:  return assign<SUM, int16_t>();
+        case UR_TYPE_UINT32: return assign<SUM, uint32_t>();
+        case UR_TYPE_INT32:  return assign<SUM, int32_t>();
+        case UR_TYPE_UINT64: return assign<SUM, uint64_t>();
+        case UR_TYPE_INT64:  return assign<SUM, int64_t>();
+        case UR_TYPE_FLOAT:  return assign<SUM, float>();
+        case UR_TYPE_DOUBLE: return assign<SUM, double>();
         default:
             std::cerr << "Only char, int, uint, float and double can be used to SUM function." << std::endl;
             return 1;
         }
     case MIN:
-        switch (ur_type) {
-        case UR_TYPE_CHAR:   return assign<char>(ag_type);
-        case UR_TYPE_UINT8:  return assign<uint8_t>(ag_type);
-        case UR_TYPE_INT8:   return assign<int8_t>(ag_type);
-        case UR_TYPE_UINT16: return assign<uint16_t>(ag_type);
-        case UR_TYPE_INT16:  return assign<int16_t>(ag_type);
-        case UR_TYPE_UINT32: return assign<uint32_t>(ag_type);
-        case UR_TYPE_INT32:  return assign<int32_t>(ag_type);
-        case UR_TYPE_UINT64: return assign<uint64_t>(ag_type);
-        case UR_TYPE_INT64:  return assign<int64_t>(ag_type);
-        case UR_TYPE_FLOAT:  return assign<float>(ag_type);
-        case UR_TYPE_DOUBLE: return assign<double>(ag_type);
-        case UR_TYPE_TIME:   return assign<time_t>(ag_type);
-        case UR_TYPE_IP:     return assign<uint128_t>(ag_type);
+        switch (ur_f_type) {
+        case UR_TYPE_CHAR:   return assign<MIN, char>();
+        case UR_TYPE_UINT8:  return assign<MIN, uint8_t>();
+        case UR_TYPE_INT8:   return assign<MIN, int8_t>();
+        case UR_TYPE_UINT16: return assign<MIN, uint16_t>();
+        case UR_TYPE_INT16:  return assign<MIN, int16_t>();
+        case UR_TYPE_UINT32: return assign<MIN, uint32_t>();
+        case UR_TYPE_INT32:  return assign<MIN, int32_t>();
+        case UR_TYPE_UINT64: return assign<MIN, uint64_t>();
+        case UR_TYPE_INT64:  return assign<MIN, int64_t>();
+        case UR_TYPE_FLOAT:  return assign<MIN, float>();
+        case UR_TYPE_DOUBLE: return assign<MIN, double>();
+        case UR_TYPE_TIME:   return assign<MIN, time_t>();
+        case UR_TYPE_IP:     return assign<MIN, uint128_t>();
         default:
             std::cerr << "Only char, int, uint, float, double and ip can be used to MIN function." << std::endl;
             return 1;
         }
     case MAX:
-        switch (ur_type) {
-        case UR_TYPE_CHAR:   return assign<char>(ag_type);
-        case UR_TYPE_UINT8:  return assign<uint8_t>(ag_type);
-        case UR_TYPE_INT8:   return assign<int8_t>(ag_type);
-        case UR_TYPE_UINT16: return assign<uint16_t>(ag_type);
-        case UR_TYPE_INT16:  return assign<int16_t>(ag_type);
-        case UR_TYPE_UINT32: return assign<uint32_t>(ag_type);
-        case UR_TYPE_INT32:  return assign<int32_t>(ag_type);
-        case UR_TYPE_UINT64: return assign<uint64_t>(ag_type);
-        case UR_TYPE_INT64:  return assign<int64_t>(ag_type);
-        case UR_TYPE_FLOAT:  return assign<float>(ag_type);
-        case UR_TYPE_DOUBLE: return assign<double>(ag_type);
-        case UR_TYPE_TIME:   return assign<time_t>(ag_type);
-        case UR_TYPE_IP:     return assign<uint128_t>(ag_type);
+        switch (ur_f_type) {
+        case UR_TYPE_CHAR:   return assign<MAX, char>();
+        case UR_TYPE_UINT8:  return assign<MAX, uint8_t>();
+        case UR_TYPE_INT8:   return assign<MAX, int8_t>();
+        case UR_TYPE_UINT16: return assign<MAX, uint16_t>();
+        case UR_TYPE_INT16:  return assign<MAX, int16_t>();
+        case UR_TYPE_UINT32: return assign<MAX, uint32_t>();
+        case UR_TYPE_INT32:  return assign<MAX, int32_t>();
+        case UR_TYPE_UINT64: return assign<MAX, uint64_t>();
+        case UR_TYPE_INT64:  return assign<MAX, int64_t>();
+        case UR_TYPE_FLOAT:  return assign<MAX, float>();
+        case UR_TYPE_DOUBLE: return assign<MAX, double>();
+        case UR_TYPE_TIME:   return assign<MAX, time_t>();
+        case UR_TYPE_IP:     return assign<MAX, uint128_t>();
         default:
             std::cerr << "Only char, int, uint, float, double and ip can be used to MAX function." << std::endl;
             return 1;
         }
     case BIT_AND:
-        switch (ur_type) {
-        case UR_TYPE_CHAR:   return assign<char>(ag_type);
-        case UR_TYPE_UINT8:  return assign<uint8_t>(ag_type);
-        case UR_TYPE_INT8:   return assign<int8_t>(ag_type);
-        case UR_TYPE_UINT16: return assign<uint16_t>(ag_type);
-        case UR_TYPE_INT16:  return assign<int16_t>(ag_type);
-        case UR_TYPE_UINT32: return assign<uint32_t>(ag_type);
-        case UR_TYPE_INT32:  return assign<int32_t>(ag_type);
-        case UR_TYPE_UINT64: return assign<uint64_t>(ag_type);
-        case UR_TYPE_INT64:  return assign<int64_t>(ag_type);
+        switch (ur_f_type) {
+        case UR_TYPE_CHAR:   return assign<BIT_AND, char>();
+        case UR_TYPE_UINT8:  return assign<BIT_AND, uint8_t>();
+        case UR_TYPE_INT8:   return assign<BIT_AND, int8_t>();
+        case UR_TYPE_UINT16: return assign<BIT_AND, uint16_t>();
+        case UR_TYPE_INT16:  return assign<BIT_AND, int16_t>();
+        case UR_TYPE_UINT32: return assign<BIT_AND, uint32_t>();
+        case UR_TYPE_INT32:  return assign<BIT_AND, int32_t>();
+        case UR_TYPE_UINT64: return assign<BIT_AND, uint64_t>();
+        case UR_TYPE_INT64:  return assign<BIT_AND, int64_t>();
         default:
             std::cerr << "Only char, int and uint can be used to BIT AND function." << std::endl;
             return 1;
         }
+    default:
+        assert("Invalid case option.\n");
+        return 1;
+    }
 }
 
 // TODO sorted append ur_array ur_array
@@ -459,7 +476,6 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
 
 Field::Field(const Field_config cfg, const ur_field_id_t field_id)
 {
-    std::pair<aggr_func, std::size_t> template_data;
     ur_field_type_t ur_field_type = ur_get_type(field_id);
 
     name = cfg.name;
@@ -475,24 +491,19 @@ Field::Field(const Field_config cfg, const ur_field_id_t field_id)
             throw std::runtime_error("Invalid sort key type.");
         }
         ur_sort_key_type = ur_get_type(ur_sort_key_id);
-        template_data = get_template_data(type, ur_field_type, ur_sort_key_type);
+        if (set_templates(ur_field_type, ur_sort_key_type))
+            throw std::runtime_error("Cannot set field template.");
     } else {
-        template_data = get_template_data(type, ur_field_type);
+        if (set_templates(type, ur_field_type))
+            throw std::runtime_error("Cannot set field template.");
     }
-    
-    if (template_data.first == nullptr)
-        throw std::runtime_error("No template found. Skipping...");
-
-    postprocessing = get_template_post_fnc(type, ur_field_type);
-    aggregation_function = template_data.first;
-    data_size = template_data.second;
 }
 
 
 void Fields::add_field(Field field)
 {
     fields_.emplace_back(std::make_pair(field, offset_));
-    offset_ += field.data_size;
+    offset_ += field.ag_data_size;
 }
 
 void Fields::reset_fields() noexcept
@@ -515,9 +526,28 @@ void* Fields::allocate_memory()
     for (auto data : fields_) {
         switch (data.first.type) {
         case SUM:
-            // TODO
+        case MAX:
+        case BIT_AND:
+        case AVG:
+            data.first.init(memory, nullptr);
+            break;
+        case MIN:
+            data.first.init(memory, memory);
+            break;
+        case APPEND: {
+            struct Config_append cfg = {data.first.limit, data.first.delimiter};
+            data.first.init(memory, &cfg);
+            break;
         }
-        memory = ((char *)memory) + data.first.data_size;
+        case SORTED_APPEND: {
+            struct Config_sorted_append cfg = {data.first.limit, data.first.delimiter, data.first.sort_type};
+            data.first.init(memory, &cfg);
+            break;
+        }
+        default:
+            assert("Invalid case option.\n");
+        }
+        memory = ((char *)memory) + data.first.ag_data_size;
     }
     return m_ptr;
 }

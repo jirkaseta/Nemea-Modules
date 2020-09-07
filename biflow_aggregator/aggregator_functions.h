@@ -11,7 +11,7 @@
 #ifndef AGGREGATOR_FUNCTIONS_H
 #define AGGREGATOR_FUNCTIONS_H
 
-#include "aggregator_fields.h"
+#include "aggregator.h"
 
 #include <iostream>
 #include <limits>
@@ -56,11 +56,10 @@ struct Average_data : Basic_data<T> {
         new(mem) Average_data<T>();
     }
 
-    static inline void *postprocessing(void *mem, std::size_t& size, std::size_t& elem_cnt) noexcept
+    static inline const void *postprocessing(void *mem, std::size_t& elem_cnt) noexcept
     {
         Average_data<T> *avg = static_cast<Average_data<T>*>(mem);
         avg->data /= avg->cnt;
-        size = sizeof(T);
         return static_cast<void *>(&avg->data);
     }
 };
@@ -86,11 +85,10 @@ struct Append_data : Config_append {
         append->data.reserve(config->limit);
     }
 
-    static inline void *postprocessing(void *mem, std::size_t& size, std::size_t& elem_cnt) noexcept
+    static inline const void *postprocessing(void *mem, std::size_t& elem_cnt) noexcept
     {
         Append_data<T> *append = static_cast<Append_data<T>*>(mem);
         elem_cnt = append->data.size(); 
-        size = append->data.size() * sizeof(T);
         return append->data.data();
     }
 };
@@ -120,7 +118,7 @@ struct Sorted_append_data : Config_sorted_append {
     }
 
 
-    static inline void *postprocessing(void *mem, std::size_t& size, std::size_t& elem_cnt)
+    static inline const void *postprocessing(void *mem, std::size_t& elem_cnt)
     {
         Sorted_append_data<T, K> *sorted_append = static_cast<Sorted_append_data<T, K>*>(mem);
         Sort_type sort_type = sorted_append->sort_type;
@@ -141,7 +139,6 @@ struct Sorted_append_data : Config_sorted_append {
         }
 
         elem_cnt = sorted_append->result.size();
-        size = sorted_append->result.size() * sizeof(T);
         return sorted_append->result.data();
     }    
 };
@@ -155,7 +152,7 @@ struct Sorted_append_data : Config_sorted_append {
 template<typename T>
 inline void sum(const void *src, void *dst) noexcept
 {
-    basic_data<T> *sum = static_cast<basic_data<T>*>(dst);
+    Basic_data<T> *sum = static_cast<Basic_data<T>*>(dst);
     sum->data += *(static_cast<const T*>(src));
 }
 
@@ -168,7 +165,7 @@ inline void sum(const void *src, void *dst) noexcept
 template<typename T>
 inline void min(const void *src, void *dst) noexcept
 {
-    basic_data<T> *min = static_cast<basic_data<T>*>(dst);
+    Basic_data<T> *min = static_cast<Basic_data<T>*>(dst);
     if (*(static_cast<const T*>(src)) < min->data)
         min->data = *(static_cast<const T*>(src));
 }
@@ -182,7 +179,7 @@ inline void min(const void *src, void *dst) noexcept
 template<typename T>
 inline void max(const void *src, void *dst) noexcept
 {
-    basic_data<T> *max = static_cast<basic_data<T>*>(dst);
+    Basic_data<T> *max = static_cast<Basic_data<T>*>(dst);
     if (*(static_cast<const T*>(src)) > max->data)
         max->data = *(static_cast<const T*>(src));
 }
@@ -196,7 +193,7 @@ inline void max(const void *src, void *dst) noexcept
 template <typename T>
 inline void bitwise_and(const void *src, void *dst) noexcept
 {
-    basic_data<T> *bit_and = static_cast<basic_data<T>*>(dst);
+    Basic_data<T> *bit_and = static_cast<Basic_data<T>*>(dst);
     bit_and->data &= *(static_cast<const T*>(src));
 }
 
@@ -209,7 +206,7 @@ inline void bitwise_and(const void *src, void *dst) noexcept
 template<typename T>
 inline void avg(const void *src, void *dst) noexcept
 {
-    average_data<T> *avg = static_cast<average_data<T>*>(dst);
+    Average_data<T> *avg = static_cast<Average_data<T>*>(dst);
     sum<T>(src, &avg->data);
     avg->cnt++;
 }
@@ -223,7 +220,7 @@ inline void avg(const void *src, void *dst) noexcept
 template <typename T>
 inline void append(const void *src, void *dst) noexcept
 {
-    append_data<T> *append = static_cast<append_data<T>*>(dst);
+    Append_data<T> *append = static_cast<Append_data<T>*>(dst);
     const ur_array_data *src_data = (static_cast<const ur_array_data*>(src));
     std::size_t appended_data_size = append->data.size();
     
@@ -251,7 +248,7 @@ inline void append(const void *src, void *dst) noexcept
 template <typename T, typename K>
 inline void sorted_append(const void *src, void *dst) noexcept
 {
-    sorted_append_data<T, K> *sorted_append = static_cast<sorted_append_data<T, K>*>(dst);
+    Sorted_append_data<T, K> *sorted_append = static_cast<Sorted_append_data<T, K>*>(dst);
     const ur_array_data *src_data = (static_cast<const ur_array_data*>(src));
 
     std::vector<T> t_data;

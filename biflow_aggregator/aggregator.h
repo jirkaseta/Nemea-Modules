@@ -8,8 +8,11 @@
  * @copyright Copyright (c) 2020 CESNET
  */
 
-#ifndef AGGREGATOR_TEMPLATES_H
-#define AGGREGATOR_TEMPLATES_H
+#ifndef AGGREGATOR_H
+#define AGGREGATOR_H
+
+#include "flat_hash_map.h"
+#include "key_template.h"
 
 #include <cassert>
 #include <unirec/unirec.h>
@@ -43,18 +46,26 @@ using aggr_func = void (*)(const void *, void *);
 using post_func = const void *(*)(void *, std::size_t&);
 using init_func = void (*)(void *, const void *);
 
+
 class Field_template {
+    template<typename T, typename K>
+    int assign() noexcept;
+
+    template<Field_type ag_type, typename T>
+    int assign() noexcept;
+
+protected:
+
     aggr_func ag_fnc;
     post_func post_proc_fnc;
     init_func init_fnc;
     std::size_t typename_size;
-    std::size_t ag_data_size;
+
+    int set_templates(const Field_type ag_type, const ur_field_type_t ur_f_type);
+    int set_templates(const ur_field_type_t ur_f_type, const ur_field_type_t ur_sort_key_f_type);
 
 public:
-
-    void init(void *tmplt_mem, const void *cfg);
-    void aggregate(const void *src, void *dst);
-    const void *post_processing(void *ag_data, std::size_t& typename_size, std::size_t& elem_cnt);
+    std::size_t ag_data_size;
 };
 
 struct Flow_data {
@@ -80,7 +91,7 @@ struct Field_config {
 };
 
 // Class to represent aggregation field.
-class Field : public Field_config, private Field_template {
+class Field : public Field_config, public Field_template {
 public:
     // ID of unirec field
     ur_field_id_t ur_field_id;
@@ -89,9 +100,11 @@ public:
     ur_field_id_t ur_sort_key_id;
     ur_field_type_t ur_sort_key_type;
 
-    std::size_t data_size;
-
     Field(const Field_config cfg, const ur_field_id_t field_id);
+
+    void init(void *tmplt_mem, const void *cfg);
+    void aggregate(const void *src, void *dst);
+    const void *post_processing(void *ag_data, std::size_t& typename_size, std::size_t& elem_cnt);
 };
 
 // Class to represent all aggregation fields and memory that fields need.
@@ -114,6 +127,13 @@ public:
     std::vector<std::pair<Field, std::size_t>> get_fields() noexcept;
 };
 
+template<typename Key>
+class Aggregator : public Fields, public KeyTemplate {
+
+public:
+    ska::flat_hash_map<Key, Flow_data> flow_cache;
+};
+
 } // namespace aggregator
 
-#endif // AGGREGATOR_TEMPLATES_H    
+#endif // AGGREGATOR_H    

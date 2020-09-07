@@ -23,7 +23,7 @@ AC_ARG_ENABLE([debug],
                 CFLAGS="-Wall -g -O0 $CFLAGS"
                 CXXFLAGS="-Wall -g -O0 $CXXFLAGS"
         fi], [CFLAGS="-Wall -g -O3 $CFLAGS"
-              CXXFLAGS="-Wall -g -O3 $CXXFLAGS"
+              CXXFLAGS="-Wall -g -O3 -std=gnu++17 $CXXFLAGS"
               CPPFLAGS="-DNDEBUG=1 $CPPFLAGS"])
 AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
 
@@ -227,6 +227,7 @@ AM_CONDITIONAL(MAKE_DEB, test x$DEBUILD != x)
 AC_CONFIG_FILES([Makefile
                  aggregator/Makefile
                  anonymizer/Makefile
+                 biflow_aggregator/Makefile
                  bloom_history/Makefile
                  debug_sender/Makefile
                  device_classifier/Makefile

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<aggregator>
+	<!-- <field>
+		<name>PPI_PKT_LENGTHS</name>
+		<type>SORTED_APPEND</type>
+		<delimiter>:</delimiter>
+		<sort_key>PACKETS</sort_key>
+		<sort_type>ASCENDING</sort_type>
+		<size>200</size>
+	</field> -->
+	<field>
+		<name>DST_IP</name>
+		<type>MIN</type>
+	</field>
+	<field>
+		<name>PACKETS</name>
+		<type>SUM</type>
+	</field>
+	<!-- <field>
+		<name>SRC_IP</name>
+		<type>KEY</type>
+	</field>
+	<field>
+		<name>DST_IP</name>
+		<type>KEY</type>
+	</field> -->
+	<field>
+		<name>SRC_PORT</name>
+		<type>KEY</type>
+	</field>
+</aggregator>
+
