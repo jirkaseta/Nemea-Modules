@@ -23,7 +23,7 @@ AC_ARG_ENABLE([debug],
                 CFLAGS="-Wall -g -O0 $CFLAGS"
                 CXXFLAGS="-Wall -g -O0 $CXXFLAGS"
         fi], [CFLAGS="-Wall -g -O3 $CFLAGS"
-              CXXFLAGS="-Wall -g -O3 -std=gnu++17 $CXXFLAGS"
+              CXXFLAGS="-Wall -g -O3 $CXXFLAGS"
               CPPFLAGS="-DNDEBUG=1 $CPPFLAGS"])
 AM_CONDITIONAL(DEBUG, test x"$debug" = x"true")
 
