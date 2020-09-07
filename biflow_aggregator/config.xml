@@ -4,10 +4,24 @@
 		<name>PPI_PKT_LENGTHS</name>
 		<type>SORTED_APPEND</type>
 		<delimiter>:</delimiter>
-		<sort_key>PACKETS</sort_key>
-		<sort_type>ASCENDING</sort_type>
+		<sort_key>PPI_PKT_TIMES</sort_key>
+		<sort_type>DESCENDING</sort_type>
 		<size>200</size>
 	</field> -->
+	<field>
+		<name>PPI_PKT_TIMES</name>
+		<type>SORTED_APPEND</type>
+		<delimiter>:</delimiter>
+		<sort_key>PPI_PKT_LENGTHS</sort_key>
+		<sort_type>ASCENDING</sort_type>
+		<size>200</size>
+	</field>
+	<field>
+		<name>SBFD_USER</name>
+		<type>APPEND</type>
+		<delimiter>:</delimiter>
+		<size>200</size>
+	</field>
 	<field>
 		<name>DST_IP</name>
 		<type>MIN</type>

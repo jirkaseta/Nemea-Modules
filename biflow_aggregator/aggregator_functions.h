@@ -26,6 +26,7 @@ struct ur_array_data {
     std::size_t cnt_elements;
     const void *ptr_first;
     const void *sort_key;
+    std::size_t sort_key_elements;
 };
 
 /*
@@ -81,7 +82,7 @@ struct Append_data : Config_append {
         Append_data<T> *append = new(mem) Append_data<T>();
         const Config_append *config = static_cast<const Config_append *>(cfg);
         append->limit = config->limit;
-        append->delimiter = config->limit;
+        append->delimiter = config->delimiter;
         append->data.reserve(config->limit);
     }
 
@@ -98,13 +99,13 @@ struct Config_sorted_append {
     char delimiter;
     Sort_type sort_type;
 };
-
+#include <stdio.h>
 /*
  * Structure used to store data for sorted append function.
  */
 template <typename T, typename K>
 struct Sorted_append_data : Config_sorted_append {
-    std::vector<std::pair<std::vector<T>,K>> data;
+    std::vector<std::pair<T, K>> data;
     std::vector<T> result;
     
     static inline void init(void *mem, const void *cfg)
@@ -122,20 +123,17 @@ struct Sorted_append_data : Config_sorted_append {
     {
         Sorted_append_data<T, K> *sorted_append = static_cast<Sorted_append_data<T, K>*>(mem);
         Sort_type sort_type = sorted_append->sort_type;
-        sort(sorted_append->data.begin(), sorted_append->data.end(), [&sort_type](const std::pair<std::vector<T>,K>& a, const std::pair<std::vector<T>,K>& b) -> bool { 
+        sort(sorted_append->data.begin(), sorted_append->data.end(), [&sort_type](const std::pair<T,K>& a, const std::pair<T,K>& b) -> bool { 
             if (sort_type == ASCENDING)
-                return a.second > b.second;
-            else
                 return a.second < b.second;
+            else
+                return a.second > b.second;
             }); 
 
         for (auto it = sorted_append->data.begin(); it != sorted_append->data.end(); it++) {
             if (sorted_append->result.size() == sorted_append->limit)
                 break;
-            if (sorted_append->result.size() + it->first.size() <= sorted_append->limit)
-                sorted_append->result.insert(sorted_append->result.end(), it->first.begin(), it->first.end());
-            else
-                sorted_append->result.insert(sorted_append->result.end(), it->first.begin(), it->first.begin() + (sorted_append->limit - sorted_append->result.size()));
+            sorted_append->result.emplace_back(it->first);
         }
 
         elem_cnt = sorted_append->result.size();
@@ -251,11 +249,12 @@ inline void sorted_append(const void *src, void *dst) noexcept
     Sorted_append_data<T, K> *sorted_append = static_cast<Sorted_append_data<T, K>*>(dst);
     const ur_array_data *src_data = (static_cast<const ur_array_data*>(src));
 
-    std::vector<T> t_data;
-    t_data.insert(t_data.begin(), static_cast<const T*>(src_data->ptr_first), \
-        static_cast<const T*>(src_data->ptr_first) + src_data->cnt_elements);
+    assert(src_data->sort_key_elements == src_data->cnt_elements);
 
-    sorted_append->data.emplace_back(std::make_pair(t_data, *((K*)src_data->sort_key)));
+    for (std::size_t i = 0; i < src_data->sort_key_elements; i++) {
+        std::pair<T, K> t_k = std::make_pair(((T *)src_data->ptr_first)[i], ((K*)src_data->sort_key)[i]);
+        sorted_append->data.emplace_back(t_k);
+    }
 }
 
 } // namespace aggregator

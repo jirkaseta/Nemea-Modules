@@ -234,6 +234,9 @@ do_mainloop(Configuration& config, ur_template_t *in_tmplt)
         }
 
         aggregator::Flow_data *flow_data = static_cast<aggregator::Flow_data *>(&(*insered_data.first).second);
+        if (insered_data.second == true) {
+            flow_data->update((uint32_t)ur_get(in_tmplt, in_rec, F_COUNT));
+        }
         for (auto field : agg.get_fields()) {
             if (ur_is_array(field.first.ur_field_id)) {
                 aggregator::ur_array_data src_data;
@@ -241,6 +244,11 @@ do_mainloop(Configuration& config, ur_template_t *in_tmplt)
                 src_data.ptr_first = ur_get_ptr_by_id(in_tmplt, in_rec, field.first.ur_field_id);
                 if (field.first.type == aggregator::SORTED_APPEND) {
                     src_data.sort_key = ur_get_ptr_by_id(in_tmplt, in_rec, field.first.ur_sort_key_id);
+                    if (ur_is_array(field.first.ur_sort_key_id))
+                        src_data.sort_key_elements = ur_array_get_elem_cnt(in_tmplt, in_rec, field.first.ur_sort_key_id);
+                    else
+                        src_data.sort_key_elements = 1;
+
                 }
                 field.first.aggregate(&src_data, &flow_data->data[field.second]);
             } else 
