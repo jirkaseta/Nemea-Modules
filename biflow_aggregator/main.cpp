@@ -24,7 +24,6 @@
 #include "key_template.h"
 #include "aggregator.h"
 #include "aggregator_functions.h"
-#include "ipaddr.h"
 #include "fields.h"
 #include "configuration.h"
 
