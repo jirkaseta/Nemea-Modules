@@ -30,7 +30,7 @@ enum Field_type {
     MAX,
     BIT_AND,
     APPEND,
-    SORTED_APPEND,
+    SORTED_MERGE,
     INVALID_TYPE,
 };
 
@@ -107,7 +107,7 @@ public:
     ur_field_id_t ur_field_id;
     ur_field_id_t ur_field_reverse_id;
 
-    // only for SORTED_APPEND;
+    // only for SORTED_MERGE;
     ur_field_id_t ur_sort_key_id;
     ur_field_type_t ur_sort_key_type;
 

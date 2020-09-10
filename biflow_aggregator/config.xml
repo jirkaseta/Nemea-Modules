@@ -3,7 +3,7 @@
 	<id name="biflow">
 		<!-- <field>
 			<name>PPI_PKT_LENGTHS</name>
-			<type>SORTED_APPEND</type>
+			<type>SORTED_MERGE</type>
 			<delimiter>:</delimiter>
 			<sort_key>PPI_PKT_TIMES</sort_key>
 			<sort_type>DESCENDING</sort_type>
@@ -11,7 +11,7 @@
 		</field>
 		<field>
 			<name>PPI_PKT_TIMES</name>
-			<type>SORTED_APPEND</type>
+			<type>SORTED_MERGE</type>
 			<delimiter>:</delimiter>
 			<sort_key>PPI_PKT_LENGTHS</sort_key>
 			<sort_type>ASCENDING</sort_type>

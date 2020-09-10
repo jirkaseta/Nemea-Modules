@@ -71,11 +71,11 @@ void Field::init(void *tmplt_mem, const void *cfg)
 template<typename T, typename K>
 int Field_template::assign() noexcept
 {
-    ag_fnc = sorted_append<T, K>;
-    post_proc_fnc = Sorted_append_data<T, K>::postprocessing;
+    ag_fnc = sorted_merge<T, K>;
+    post_proc_fnc = Sorted_merge_data<T, K>::postprocessing;
     typename_size = sizeof(T);
-    init_fnc = Sorted_append_data<T, K>::init;
-    ag_data_size = sizeof(Sorted_append_data<T, K>);
+    init_fnc = Sorted_merge_data<T, K>::init;
+    ag_data_size = sizeof(Sorted_merge_data<T, K>);
     return 0;
 }
 
@@ -251,7 +251,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<uint8_t, time_t>();
         case UR_TYPE_A_IP:     return assign<uint8_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -270,7 +270,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<int8_t, time_t>();
         case UR_TYPE_A_IP:     return assign<int8_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -289,7 +289,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<uint16_t, time_t>();
         case UR_TYPE_A_IP:     return assign<uint16_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -308,7 +308,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<int16_t, time_t>();
         case UR_TYPE_A_IP:     return assign<int16_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -327,7 +327,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<uint32_t, time_t>();
         case UR_TYPE_A_IP:     return assign<uint32_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -346,7 +346,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<int32_t, time_t>();
         case UR_TYPE_A_IP:     return assign<int32_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -365,7 +365,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<uint64_t, time_t>();
         case UR_TYPE_A_IP:     return assign<uint64_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -384,7 +384,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<int64_t, time_t>();
         case UR_TYPE_A_IP:     return assign<int64_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -403,7 +403,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<float, time_t>();
         case UR_TYPE_A_IP:     return assign<float, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -422,7 +422,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<double, time_t>();
         case UR_TYPE_A_IP:     return assign<double, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -441,7 +441,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<uint128_t, time_t>();
         case UR_TYPE_A_IP:     return assign<uint128_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -460,7 +460,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<mac_addr_t, time_t>();
         case UR_TYPE_A_IP:     return assign<mac_addr_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -479,7 +479,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<time_t, time_t>();
         case UR_TYPE_A_IP:     return assign<time_t, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -498,7 +498,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
         case UR_TYPE_A_TIME:   return assign<char, time_t>();
         case UR_TYPE_A_IP:     return assign<char, uint128_t>();
         default: 
-            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_APPEND key." << std::endl;
+            std::cerr << "Only array of int, uint, float, double, ip, mac and time can be used as SORTED_MERGE key." << std::endl;
             return 1;
         }
         break;
@@ -520,7 +520,7 @@ Field::Field(const Field_config cfg, const ur_field_id_t field_id, const ur_fiel
     ur_field_reverse_id = rev_field_id;
     ur_field_id = field_id;
 
-    if (type == SORTED_APPEND) {
+    if (type == SORTED_MERGE) {
         ur_sort_key_id = ur_get_id_by_name(sort_name.c_str());
         if (ur_sort_key_id == UR_E_INVALID_NAME) {
             throw std::runtime_error("Invalid sort key type.");
@@ -574,8 +574,8 @@ void* Fields::allocate_memory()
             data.first.init(memory, &cfg);
             break;
         }
-        case SORTED_APPEND: {
-            struct Config_sorted_append cfg = {data.first.limit, data.first.delimiter, data.first.sort_type};
+        case SORTED_MERGE: {
+            struct Config_sorted_merge cfg = {data.first.limit, data.first.delimiter, data.first.sort_type};
             data.first.init(memory, &cfg);
             break;
         }

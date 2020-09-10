@@ -94,6 +94,8 @@ extern "C" {
  *
  * Do not compile and link xxhash.o as a separate object, as it is not useful.
  */
+
+#define XXH_INLINE_ALL
 #if (defined(XXH_INLINE_ALL) || defined(XXH_PRIVATE_API)) \
     && !defined(XXH_INLINE_ALL_31684351384)
    /* this section should be traversed only once */
@@ -113,6 +115,8 @@ extern "C" {
      /* note: this version may generate warnings for unused static functions */
 #    define XXH_PUBLIC_API static
 #  endif
+
+//#define XXH_IMPLEMENTATION
 
    /*
     * This part deals with the special case where a unit wants to inline xxHash,

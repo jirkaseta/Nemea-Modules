@@ -25,9 +25,9 @@ bool Configuration::verify_field(aggregator:: Field_config& field)
 {
     if (field.type == aggregator::INVALID_TYPE)
         return false;
-    if (field.sort_name.length() == 0 && field.type == aggregator::SORTED_APPEND)
+    if (field.sort_name.length() == 0 && field.type == aggregator::SORTED_MERGE)
         return false;
-    if (field.sort_type == aggregator::INVALID_SORT_TYPE && field.type == aggregator::SORTED_APPEND) 
+    if (field.sort_type == aggregator::INVALID_SORT_TYPE && field.type == aggregator::SORTED_MERGE) 
         return false;
 
     // check duplications
@@ -247,8 +247,8 @@ aggregator::Field_type Configuration::get_field_type(const char *input)
     if (!strcmp(input, "AVG")) return aggregator::AVG;
     if (!strcmp(input, "BITAND")) return aggregator::BIT_AND;
     if (!strcmp(input, "APPEND")) return aggregator::APPEND;
-    if (!strcmp(input, "SORTED_APPEND")) return aggregator::SORTED_APPEND;
-    std::cerr << "Invalid type field. Given: " << input << ", Expected: KEY|SUM|MIN|MAX|AVG|BITAND|APPEND|SORTED_APPEND." << std::endl;
+    if (!strcmp(input, "SORTED_MERGE")) return aggregator::SORTED_MERGE;
+    std::cerr << "Invalid type field. Given: " << input << ", Expected: KEY|SUM|MIN|MAX|AVG|BITAND|APPEND|SORTED_MERGE." << std::endl;
     return aggregator::INVALID_TYPE;
 }
 

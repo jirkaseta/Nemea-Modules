@@ -94,7 +94,7 @@ struct Append_data : Config_append {
     }
 };
 
-struct Config_sorted_append {
+struct Config_sorted_merge {
     std::size_t limit;
     char delimiter;
     Sort_type sort_type;
@@ -104,40 +104,40 @@ struct Config_sorted_append {
  * Structure used to store data for sorted append function.
  */
 template <typename T, typename K>
-struct Sorted_append_data : Config_sorted_append {
+struct Sorted_merge_data : Config_sorted_merge {
     std::vector<std::pair<T, K>> data;
     std::vector<T> result;
     
     static inline void init(void *mem, const void *cfg)
     {
-        Sorted_append_data<T, K> *sorted_append = new(mem) Sorted_append_data<T, K>();
-        const Config_sorted_append *config = static_cast<const Config_sorted_append *>(cfg);
-        sorted_append->limit = config->limit;
-        sorted_append->sort_type = config->sort_type;
-        sorted_append->delimiter = config->delimiter;
-        sorted_append->result.reserve(config->limit);
+        Sorted_merge_data<T, K> *sorted_merge = new(mem) Sorted_merge_data<T, K>();
+        const Config_sorted_merge *config = static_cast<const Config_sorted_merge *>(cfg);
+        sorted_merge->limit = config->limit;
+        sorted_merge->sort_type = config->sort_type;
+        sorted_merge->delimiter = config->delimiter;
+        sorted_merge->result.reserve(config->limit);
     }
 
 
     static inline const void *postprocessing(void *mem, std::size_t& elem_cnt)
     {
-        Sorted_append_data<T, K> *sorted_append = static_cast<Sorted_append_data<T, K>*>(mem);
-        Sort_type sort_type = sorted_append->sort_type;
-        sort(sorted_append->data.begin(), sorted_append->data.end(), [&sort_type](const std::pair<T,K>& a, const std::pair<T,K>& b) -> bool { 
+        Sorted_merge_data<T, K> *sorted_merge = static_cast<Sorted_merge_data<T, K>*>(mem);
+        Sort_type sort_type = sorted_merge->sort_type;
+        sort(sorted_merge->data.begin(), sorted_merge->data.end(), [&sort_type](const std::pair<T,K>& a, const std::pair<T,K>& b) -> bool { 
             if (sort_type == ASCENDING)
                 return a.second < b.second;
             else
                 return a.second > b.second;
             }); 
 
-        for (auto it = sorted_append->data.begin(); it != sorted_append->data.end(); it++) {
-            if (sorted_append->result.size() == sorted_append->limit)
+        for (auto it = sorted_merge->data.begin(); it != sorted_merge->data.end(); it++) {
+            if (sorted_merge->result.size() == sorted_merge->limit)
                 break;
-            sorted_append->result.emplace_back(it->first);
+            sorted_merge->result.emplace_back(it->first);
         }
 
-        elem_cnt = sorted_append->result.size();
-        return sorted_append->result.data();
+        elem_cnt = sorted_merge->result.size();
+        return sorted_merge->result.data();
     }    
 };
 
@@ -244,16 +244,16 @@ inline void append(const void *src, void *dst) noexcept
 }
 
 template <typename T, typename K>
-inline void sorted_append(const void *src, void *dst) noexcept
+inline void sorted_merge(const void *src, void *dst) noexcept
 {
-    Sorted_append_data<T, K> *sorted_append = static_cast<Sorted_append_data<T, K>*>(dst);
+    Sorted_merge_data<T, K> *sorted_merge = static_cast<Sorted_merge_data<T, K>*>(dst);
     const ur_array_data *src_data = (static_cast<const ur_array_data*>(src));
 
     assert(src_data->sort_key_elements == src_data->cnt_elements);
 
     for (std::size_t i = 0; i < src_data->sort_key_elements; i++) {
         std::pair<T, K> t_k = std::make_pair(((T *)src_data->ptr_first)[i], ((K*)src_data->sort_key)[i]);
-        sorted_append->data.emplace_back(t_k);
+        sorted_merge->data.emplace_back(t_k);
     }
 }
 
