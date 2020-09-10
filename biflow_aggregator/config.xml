@@ -1,46 +1,62 @@
 <?xml version="1.0"?>
 <aggregator>
-	<!-- <field>
-		<name>PPI_PKT_LENGTHS</name>
-		<type>SORTED_APPEND</type>
-		<delimiter>:</delimiter>
-		<sort_key>PPI_PKT_TIMES</sort_key>
-		<sort_type>DESCENDING</sort_type>
-		<size>200</size>
-	</field> -->
-	<field>
-		<name>PPI_PKT_TIMES</name>
-		<type>SORTED_APPEND</type>
-		<delimiter>:</delimiter>
-		<sort_key>PPI_PKT_LENGTHS</sort_key>
-		<sort_type>ASCENDING</sort_type>
-		<size>200</size>
-	</field>
-	<field>
-		<name>SBFD_USER</name>
-		<type>APPEND</type>
-		<delimiter>:</delimiter>
-		<size>200</size>
-	</field>
-	<field>
-		<name>DST_IP</name>
-		<type>MIN</type>
-	</field>
-	<field>
-		<name>PACKETS</name>
-		<type>SUM</type>
-	</field>
-	<!-- <field>
-		<name>SRC_IP</name>
-		<type>KEY</type>
-	</field>
-	<field>
-		<name>DST_IP</name>
-		<type>KEY</type>
-	</field> -->
-	<field>
-		<name>SRC_PORT</name>
-		<type>KEY</type>
-	</field>
+	<id name="biflow">
+		<!-- <field>
+			<name>PPI_PKT_LENGTHS</name>
+			<type>SORTED_APPEND</type>
+			<delimiter>:</delimiter>
+			<sort_key>PPI_PKT_TIMES</sort_key>
+			<sort_type>DESCENDING</sort_type>
+			<size>200</size>
+		</field>
+		<field>
+			<name>PPI_PKT_TIMES</name>
+			<type>SORTED_APPEND</type>
+			<delimiter>:</delimiter>
+			<sort_key>PPI_PKT_LENGTHS</sort_key>
+			<sort_type>ASCENDING</sort_type>
+			<size>200</size>
+		</field> -->
+		<!-- <field>
+			<name>PPI_PKT_LENGTHS</name>
+			<type>APPEND</type>
+			<delimiter>:</delimiter>
+			<size>200</size>
+		</field> -->
+		<field>
+			<name>PACKETS_REV</name>
+			<reverse_name>PACKETS</reverse_name>
+			<type>SUM</type>
+		</field>
+		<field>
+			<name>PACKETS</name>
+			<reverse_name>PACKETS_REV</reverse_name>
+			<type>SUM</type>
+		</field>
+		<field>
+			<name>SRC_IP</name>
+			<reverse_name>DST_IP</reverse_name>
+			<type>KEY</type>
+		</field>
+		<field>
+			<name>DST_IP</name>
+			<reverse_name>SRC_IP</reverse_name>
+			<type>KEY</type>
+		</field>
+		<field>
+			<name>SRC_PORT</name>
+			<reverse_name>DST_PORT</reverse_name>
+			<type>KEY</type>
+		</field>
+		<field>
+			<name>DST_PORT</name>
+			<reverse_name>SRC_PORT</reverse_name>
+			<type>KEY</type>
+		</field>
+		<field>
+			<name>PROTOCOL</name>
+			<type>KEY</type>
+		</field>
+	</id>
 </aggregator>
 

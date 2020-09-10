@@ -21,35 +21,48 @@
 
 using namespace rapidxml;
 
-int Configuration::verify_field(aggregator:: Field_config& field)
+bool Configuration::verify_field(aggregator:: Field_config& field)
 {
     if (field.type == aggregator::INVALID_TYPE)
-        return 1;
+        return false;
     if (field.sort_name.length() == 0 && field.type == aggregator::SORTED_APPEND)
-        return 1;
+        return false;
     if (field.sort_type == aggregator::INVALID_SORT_TYPE && field.type == aggregator::SORTED_APPEND) 
-        return 1;
-    return 0;
+        return false;
+
+    // check duplications
+    for (auto cfg_field: fields) {
+        if (field.name.compare(cfg_field.name) == 0) {
+            std::cerr << "Duplicit field name (" << field.name <<")" << std::endl;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void debug_print_cfg_field(aggregator::Field_config& field)
 {
     std::cout << "----------------" << std::endl;
     std::cout << "Name: " << field.name << std::endl;
+    std::cout << "Reverse name: " << field.reverse_name << std::endl;
     std::cout << "Type: " << field.type << std::endl;
     std::cout << "Sort key: " << field.sort_name << std::endl;
     std::cout << "Sort type: " << field.sort_type << std::endl;
     std::cout << "Delimiter: " << field.delimiter << std::endl;
     std::cout << "Size: " << field.limit << std::endl;
+    std::cout << "----------------" << std::endl;
 }
 
-std::pair<aggregator::Field_config, int> Configuration::parse_field(xml_node<> *xml_field)
+std::pair<aggregator::Field_config, bool> Configuration::parse_field(xml_node<> *xml_field)
 {
     aggregator::Field_config field = {};
 
     for (xml_node<> *option = xml_field->first_node(); option; option = option->next_sibling()) {
         if (!strcmp(option->name(), "name")) {
             field.name = option->value();
+        } else if (!strcmp(option->name(), "reverse_name")) {
+            field.reverse_name = option->value();
         } else if (!strcmp(option->name(), "type")) {
             field.type = get_field_type(option->value());
         } else if (!strcmp(option->name(), "sort_key")) {
@@ -69,21 +82,86 @@ std::pair<aggregator::Field_config, int> Configuration::parse_field(xml_node<> *
                 return std::make_pair(field, 1);;
             }
         } else {
-            std::cerr << "Invlaid file format. Expected 'name|type|[sort_key|sort_type|delimiter|size]', given '" << option->name() << "'" << std::endl;
+            std::cerr << "Invlaid file format. Expected 'name|type|[reverse_name|sort_key|sort_type|delimiter|size]', given '" << option->name() << "'" << std::endl;
             return std::make_pair(field, 1);;
         }
     }
-
-    debug_print_cfg_field(field);
+    field.to_output = true;
+    //debug_print_cfg_field(field);
     return std::make_pair(field, verify_field(field));
 }
 
-int Configuration::parse_xml(const char *filename)
+bool Configuration::is_key_present(std::string key_name)
+{
+    for (auto cfg_field : fields) {
+        if (!cfg_field.name.compare(key_name))
+            return true; 
+    }
+    return false;
+}
+
+int Configuration::check_biflow()
+{
+    const std::vector<std::string> biflow_keys = {"SRC_IP", "DST_IP", "SRC_PORT", "DST_PORT", "PROTOCOL"};
+    int ret = 0;
+    
+    for (auto key : biflow_keys) {
+        if (is_key_present(key) == false) {
+            return 0; // not a biflow key
+        }
+    }
+
+    for (auto field : fields) {
+        if (!field.name.compare("SRC_IP")) {
+            if (field.reverse_name.compare("DST_IP")) {
+                std::cerr << "Invalid combination of name/reverse name. Expected SRC_IP/DST_IP" << std::endl;
+                ret = 1;
+            }
+        } else if (!field.name.compare("DST_IP")) {
+            if (field.reverse_name.compare("SRC_IP")) {
+                std::cerr << "Invalid combination of name/reverse name. Expected DST_IP/SRC_IP" << std::endl;
+                ret = 1;
+            }
+        } else if (!field.name.compare("SRC_PORT")) {
+            if (field.reverse_name.compare("DST_PORT")) {
+                std::cerr << "Invalid combination of name/reverse name. Expected SRC_PORT/DST_PORT" << std::endl;
+                ret = 1;
+            }
+        } else if (!field.name.compare("DST_PORT")) {
+            if (field.reverse_name.compare("SRC_PORT")) {
+                std::cerr << "Invalid combination of name/reverse name. Expected DST_PORT/SRC_PORT" << std::endl;
+                ret = 1;
+            }
+        }
+    }
+
+    for (auto field : fields) {
+        if (!field.reverse_name.empty() && is_key_present(field.reverse_name) == false) { // create a reverse field
+            aggregator::Field_config f_cfg = {};
+            f_cfg.name = field.reverse_name;
+            f_cfg.reverse_name = field.name;
+            f_cfg.type = field.type;
+            f_cfg.sort_name = field.sort_name;
+            f_cfg.sort_type = field.sort_type;
+            f_cfg.delimiter = field.delimiter;
+            f_cfg.limit = field.limit;
+            f_cfg.to_output = false;
+            fields.emplace_back(f_cfg);
+        }
+    }
+
+    is_biflow_key = true;
+    return ret;
+}
+
+int Configuration::parse_xml(const char *filename, const char *identifier) 
 {
     xml_document<> doc;
     std::ifstream file(filename, std::ios::ate);
     std::streamsize size = file.tellg();
     file.seekg(0, std::ios::beg);
+    bool found = false;
+
 
     std::vector<char> buffer(size);
     if (!file.read(buffer.data(), size)) {
@@ -97,20 +175,43 @@ int Configuration::parse_xml(const char *filename)
         return 1;
     }
 
-    for (xml_node<> *xml_field = doc.first_node()->first_node(); xml_field; xml_field = xml_field->next_sibling()) {
-        std::cout << xml_field->name() <<  "\n";
-        if (strcmp(xml_field->name(), "field")) {
-            std::cerr << "Invlaid file format. Expected 'field', given '" << xml_field->name() << "'" << std::endl;
+    for (xml_node<> *id = doc.first_node()->first_node(); id; id = id->next_sibling()) {
+        if (strcmp(id->name(), "id")) {
+            std::cerr << "Invlaid file format. Expected 'id', given '" << id->name() << "'" << std::endl;
             return 1;
         }
-        std::pair<aggregator::Field_config, int> p_field = parse_field(xml_field);
-        if (p_field.second == 1)
+
+        rapidxml::xml_attribute<>* attr = id->first_attribute("name");
+        if (attr == nullptr) {
+            std::cerr << "Invalid file format. Expected '<id name=\"NAME\">'" << std::endl;
             return 1;
-        
-        fields.emplace_back(p_field.first);
+        } else {
+            if (strcmp(attr->value(), identifier))
+                continue;
+        }
+
+        found = true;
+
+        for (xml_node<> *xml_field = id->first_node(); xml_field; xml_field = xml_field->next_sibling()) {
+            if (strcmp(xml_field->name(), "field")) {
+                std::cerr << "Invlaid file format. Expected 'field', given '" << xml_field->name() << "'" << std::endl;
+                return 1;
+            }
+            std::pair<aggregator::Field_config, bool> p_field = parse_field(xml_field);
+            if (p_field.second == false)
+                return 1;
+            
+            fields.emplace_back(p_field.first);
+        }
+        break;
     }
 
-    return 0;
+    if (!found) {
+        std::cerr << "Invalid file format. No ID (" << identifier << ") found." << std::endl;
+        return 1;
+    }
+
+    return check_biflow();
 }
 
 Configuration::Configuration()
@@ -139,7 +240,6 @@ aggregator::Sort_type Configuration::get_sort_type(const char *input)
 
 aggregator::Field_type Configuration::get_field_type(const char *input)
 {
-    std::cout << "FIELD TYPE\n";
     if (!strcmp(input, "KEY")) return aggregator::KEY;
     if (!strcmp(input, "SUM")) return aggregator::SUM;
     if (!strcmp(input, "MIN")) return aggregator::MIN;

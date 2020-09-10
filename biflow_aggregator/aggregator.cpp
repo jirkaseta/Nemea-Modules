@@ -30,6 +30,17 @@ void Flow_data::update(const uint32_t count) noexcept
     cnt = count;
 }
 
+void Flow_data::update(const time_t time_first, const time_t time_last, bool is_reverse) noexcept
+{
+    cnt++;
+    if (first > time_first) {
+        first = time_first;
+        reverse = is_reverse;
+    }
+    if (last < time_last)
+        last = time_last;
+}
+
 Flow_data::Flow_data()
 {
     cnt = 0;
@@ -497,7 +508,7 @@ int Field_template::set_templates(const ur_field_type_t ur_f_type, const ur_fiel
     }
 }
 
-Field::Field(const Field_config cfg, const ur_field_id_t field_id)
+Field::Field(const Field_config cfg, const ur_field_id_t field_id, const ur_field_id_t rev_field_id)
 {
     ur_field_type_t ur_field_type = ur_get_type(field_id);
 
@@ -506,6 +517,7 @@ Field::Field(const Field_config cfg, const ur_field_id_t field_id)
     sort_name = cfg.sort_name;
     delimiter = cfg.delimiter;
     limit = cfg.limit;
+    ur_field_reverse_id = rev_field_id;
     ur_field_id = field_id;
 
     if (type == SORTED_APPEND) {

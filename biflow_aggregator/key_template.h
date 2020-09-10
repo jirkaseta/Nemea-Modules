@@ -4,19 +4,21 @@
 #include <libtrap/trap.h>
 #include <unirec/unirec.h>
 #include <vector>
+#include <tuple>
 
 #include "xxhash.h"
 
-class KeyTemplate {
-    std::vector<std::pair<int, std::size_t>> key_fields_;
-    std::size_t key_size_;
-    
+class Key_template {
+    static std::vector<std::tuple<const ur_field_id_t, const ur_field_id_t, const std::size_t>> key_fields_;
+    static std::size_t key_size_;
 
 public:
-    void update_template(int field_id, std::size_t field_size);
-    void reset_template() noexcept;
-    const std::vector<std::pair<int, std::size_t>> get_template_fields() noexcept;
-    std::size_t get_template_size();
+    enum Tuple_name {ID, REVERSE_ID, SIZE};
+
+    static void update(ur_field_id_t field_id, ur_field_id_t rev_field_id, std::size_t field_size);
+    static void reset() noexcept;
+    static const std::vector<std::tuple<const ur_field_id_t, const ur_field_id_t, const std::size_t>> get_fields() noexcept;
+    static std::size_t get_size();
 };
 
 class FlowKey {
@@ -27,6 +29,7 @@ public:
     void init(std::size_t key_size);
     void update(const void *src, std::size_t size);
     void reset();
+    bool generate(const void *flow_data, ur_template_t *tmplt, bool is_biflow);
     std::pair<void *, size_t> get_key() const;
     bool operator==(const FlowKey &other) const noexcept;
 

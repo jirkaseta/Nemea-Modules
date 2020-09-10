@@ -79,8 +79,10 @@ struct Flow_data {
     uint32_t cnt;
     time_t first;
     time_t last;
+    bool reverse;
 
     void update(const time_t time_first, const time_t time_last) noexcept;
+    void update(const time_t time_first, const time_t time_last, bool is_reverse) noexcept;
     void update(const uint32_t count) noexcept;
 
     Flow_data();
@@ -89,11 +91,13 @@ struct Flow_data {
 
 struct Field_config {
     std::string name;
+    std::string reverse_name;
     Field_type type;
     std::string sort_name;
     Sort_type sort_type;
     char delimiter;
     std::size_t limit;
+    bool to_output;
 };
 
 // Class to represent aggregation field.
@@ -101,12 +105,13 @@ class Field : public Field_config, public Field_template {
 public:
     // ID of unirec field
     ur_field_id_t ur_field_id;
+    ur_field_id_t ur_field_reverse_id;
 
     // only for SORTED_APPEND;
     ur_field_id_t ur_sort_key_id;
     ur_field_type_t ur_sort_key_type;
 
-    Field(const Field_config cfg, const ur_field_id_t field_id);
+    Field(const Field_config cfg, const ur_field_id_t field_id, const ur_field_id_t rev_field_id);
 
     void init(void *tmplt_mem, const void *cfg);
     void aggregate(const void *src, void *dst);
@@ -134,7 +139,7 @@ public:
 };
 
 template<typename Key>
-class Aggregator : public Fields, public KeyTemplate {
+class Aggregator : public Fields {
 
 public:
     ska::flat_hash_map<Key, Flow_data> flow_cache;
