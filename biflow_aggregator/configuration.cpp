@@ -163,7 +163,7 @@ int Configuration::parse_xml(const char *filename, const char *identifier)
     bool found = false;
 
 
-    std::vector<char> buffer(size);
+    std::vector<char> buffer(size + 1);
     if (!file.read(buffer.data(), size)) {
         std::cerr << "Unable to read file " << filename << std::endl;
         return 1;
@@ -217,6 +217,7 @@ int Configuration::parse_xml(const char *filename, const char *identifier)
 Configuration::Configuration()
 {
     out_tmplt = "TIME_FIRST,TIME_LAST,COUNT";
+    break_when_eof = false;
 }
 
 void Configuration::add_field_to_template(const std::string name)
@@ -252,14 +253,25 @@ aggregator::Field_type Configuration::get_field_type(const char *input)
     return aggregator::INVALID_TYPE;
 }
 
-int Configuration::set_timeout(const char *input)
+int Configuration::set_flow_cache_size(const char *input)
 {
     // TODO
     return 0;
 }
 
-int Configuration::set_flow_cache_size(const char *input)
+int Configuration::set_active_timeout(const char *input)
 {
-    // TODO
+    t_active = stoul(input);
     return 0;
+}
+
+int Configuration::set_passive_timeout(const char *input)
+{
+    t_passive = stoul(input);
+    return 0;
+}
+
+void Configuration::set_eof_break()
+{
+    break_when_eof = true;
 }

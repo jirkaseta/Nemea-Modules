@@ -32,6 +32,10 @@ class Configuration {
 
 public:
 
+
+    std::size_t t_passive;
+    std::size_t t_active;
+
     std::string out_tmplt;   
 
     void add_field_to_template(const std::string name);
@@ -40,7 +44,9 @@ public:
     bool break_when_eof;
     
     std::vector<aggregator::Field_config> get_cfg_fields() const noexcept;
-    int set_timeout(const char *input);
+    int set_active_timeout(const char *input);
+    int set_passive_timeout(const char *input);
+    void set_eof_break();
     int set_flow_cache_size(const char *input);
     int parse_xml(const char *filename, const char *identifier); 
 

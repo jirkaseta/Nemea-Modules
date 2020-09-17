@@ -13,9 +13,10 @@
 
 #include "aggregator.h"
 
+#include <unirec/unirec.h>
+
 #include <iostream>
 #include <limits>
-#include <unirec/unirec.h>
 
 namespace aggregator {
 
@@ -99,7 +100,7 @@ struct Config_sorted_merge {
     char delimiter;
     Sort_type sort_type;
 };
-#include <stdio.h>
+
 /*
  * Structure used to store data for sorted append function.
  */

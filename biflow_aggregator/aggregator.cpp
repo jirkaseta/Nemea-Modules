@@ -16,36 +16,36 @@
 
 using namespace aggregator;
 
-void Flow_data::update(const time_t time_first, const time_t time_last) noexcept
+void Flow_data::update(const time_t first, const time_t last) noexcept
 {
-    cnt++;
-    if (first > time_first)
-        first = time_first;
-    if (last < time_last)
-        last = time_last;
+    count++;
+    if (time_first > first)
+        time_first = first;
+    if (time_last < last)
+        time_last = last;
 }
 
-void Flow_data::update(const uint32_t count) noexcept
+void Flow_data::update(const uint32_t cnt) noexcept
 {
-    cnt = count;
+    count = cnt;
 }
 
-void Flow_data::update(const time_t time_first, const time_t time_last, bool is_reverse) noexcept
+void Flow_data::update(const time_t first, const time_t last, bool is_reverse) noexcept
 {
-    cnt++;
-    if (first > time_first) {
-        first = time_first;
+    count++;
+    if (time_first > first) {
+        time_first = first;
         reverse = is_reverse;
     }
-    if (last < time_last)
-        last = time_last;
+    if (time_last < last)
+        time_last = last;
 }
 
 Flow_data::Flow_data()
 {
-    cnt = 0;
-    last = 0;
-    first = std::numeric_limits<time_t>::max();
+    count = 0;
+    time_last = 0;
+    time_first = std::numeric_limits<time_t>::max();
 }
 
 const void *Field::post_processing(void *ag_data, std::size_t& typename_size, std::size_t& elem_cnt)

@@ -12,6 +12,7 @@
 #include <iterator>
 #include <utility>
 #include <type_traits>
+#include <iostream>
 
 #ifdef _MSC_VER
 #define SKA_NOINLINE(...) __declspec(noinline) __VA_ARGS__
@@ -879,6 +880,7 @@ private:
 
     void grow()
     {
+        std::cout << "GROW\n\n\n\n\n";
         rehash(std::max(size_t(4), 2 * bucket_count()));
     }
 

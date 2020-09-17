@@ -13,11 +13,15 @@
 
 #include "flat_hash_map.h"
 #include "key_template.h"
+#include "linked_list.h"
+
+#include <unirec/unirec.h>
 
 #include <cassert>
-#include <unirec/unirec.h>
 #include <string>
 #include <vector>
+#include <chrono>
+using namespace std::chrono;
 
 namespace aggregator {
 
@@ -74,16 +78,25 @@ public:
     std::size_t ag_data_size;
 };
 
+struct Timeout_data {
+    FlowKey key;
+    nanoseconds timeout;
+    nanoseconds active_timeout;
+};
+
 struct Flow_data {
     char *data;
-    uint32_t cnt;
-    time_t first;
-    time_t last;
+    node<Timeout_data> t_data;
+
+    uint32_t count;
+    time_t time_first;
+    time_t time_last;
+
     bool reverse;
 
-    void update(const time_t time_first, const time_t time_last) noexcept;
-    void update(const time_t time_first, const time_t time_last, bool is_reverse) noexcept;
-    void update(const uint32_t count) noexcept;
+    void update(const time_t first, const time_t last) noexcept;
+    void update(const time_t first, const time_t last, bool is_reverse) noexcept;
+    void update(const uint32_t cnt) noexcept;
 
     Flow_data();
 };
